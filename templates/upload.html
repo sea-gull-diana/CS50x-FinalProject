@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block script %}
+    <script>
+
+    if ('{{message}}')
+    {
+        alert('{{message}}');
+    }
+
+    </script>
+{% endblock %}
+
+{% block title %}
+    База данных
+{% endblock %}
+
+{% block main %}
+
+    <p><h1>Дополнение и обновление базы данных</h1></p>
+    <p><h4>Добавьте файл и введите имя и символ компании:</h4></p>
+        <form method="post" action="/FinalProject/update-db" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="text" class="form-control" autofocus autocomplete="off" placeholder="Название компании" name="name">
+            </div>
+            <div class="form-group">
+                <input type="file" class="form-control" accept=".csv" name="file">
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" autofocus autocomplete="off" placeholder="Символ акции" name="symbol">
+            </div>
+              <p>
+                  <h4>Число женщин и мужчин в совете директоров:</h4>
+              </p>
+            <div class="form-group">
+                <input autocomplete="off" class="form-control" name="women" placeholder="Кол. женщин" type="text">
+            </div>
+            <div class="form-group">
+                <input autocomplete="off" class="form-control" name="men" placeholder="Кол. мужчин" type="text">
+            </div>
+            <button class="btn btn-primary" type="submit">Добавить</button>
+        </form>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block script %}
+    <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var search = document.querySelector('input[type="text"]');
+        search.addEventListener('keyup', function() {
+            var cell = document.querySelectorAll("#name");
+            for (c of cell)
+            {
+                if (c.innerHTML.indexOf(search.value) !== -1)
+                {
+                  c.parentNode.style.display = "table-row";
+                }
+                else
+                {
+                  c.parentNode.style.display = "none";
+                }
+            }
+        });
+    });
+
+    </script>
+{% endblock %}
+
+{% block title %}
+    Компании, управляемые женщинами
+{% endblock %}
+
+{% block main %}
+
+<header>
+    <p class="header">Компании, управляемые женщинами</p>
+
+    <p>
+        <form action="{{ url_for('filters') }}" method="get">
+            <button type="submit" class="btn btn-outline-danger btn-lg btn-block">Выбрать лучшие компании</button>
+        </form>
+    </p>
+    <p>
+        <form class="subhead">
+            Поиск: <input class="search" type="text" placeholder="по названию">
+        </form>
+    </p>
+</header>
+
+    <div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th></th>
+                <th colspan="2">Совет директоров</th>
+                <th></th>
+            </tr>
+            <tr>
+                <th>Название</th>
+                <th>Процент женщин</th>
+                <th>Число женщин</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if not companies %}
+            <tr>
+                <td>--</td>
+                <td>--</td>
+            </tr>
+            {% endif %}
+            {% for company in companies %}
+            <tr>
+                <td id = name>{{company.company_name}}</td>
+                <td>{{"{:.0%}".format(company.women/(company.women+company.men))}}</td>
+                <td>{{company.women}}</td>
+                <td>
+                    <form id="company" action="{{ url_for('company') }}" method="get">
+                        <input type="hidden" name="company" value="{{company.company_name}}">
+                        <input type="submit" value="?">
+                    </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+    </div>
+
+{% endblock %}

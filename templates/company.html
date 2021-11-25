@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{name}}
+{% endblock %}
+
+{% block main %}
+
+<header>
+    {% if data %}
+    <p><h1>{{data[0].company_name}}</h1></p>
+    <p class="header">Число женщин в совете директоров: {{data[0].women}}</p>
+    {% endif %}
+
+    {% if stock %}
+    <p class="header">Текущая цена акции: {{"₽%.2f"|format(stock)}}</p>
+    {% endif %}
+</header>
+
+    <div class="table-responsive">
+    <table class="table table-hover scroll">
+        <thead>
+            <tr>
+                <th class="headrow"></th>
+                {% for  d in data %}
+                <th>{{d.Год}}</th>
+                {%endfor%}
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, value in data[0].items() %}
+             {% if not key in ["company_id", "Год", "Дата отчета", "company_name", "id", "women", "men", "symbol"] %}
+            <tr>
+                <th class="table-danger headcol">{{key}}</td>
+                {% for d in data %}
+                <td>{{d[key]}}</td>
+                {%endfor%}
+            </tr>
+             {% endif %}
+            {%endfor%}
+        </tbody>
+    </div>
+
+{% endblock %}

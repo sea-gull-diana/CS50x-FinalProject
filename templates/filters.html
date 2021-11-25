@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+
+{% block script %}
+    <script>
+
+    if ('{{message}}')
+    {
+        alert('{{message}}');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+          var checks = document.querySelectorAll('input[type="checkbox"]');
+          for (check of checks)
+          {
+            check.addEventListener('click', function() {
+                var c = event.srcElement;
+                if (c.checked)
+                {
+                  c.previousSibling.previousSibling.disabled = false;
+                }
+                else
+                {
+                  c.previousSibling.previousSibling.disabled = true;
+                }
+            });
+          }
+    });
+
+    </script>
+{% endblock %}
+
+{% block title %}
+    Компании, управляемые женщинами
+{% endblock %}
+
+{% block main %}
+
+<header>
+    <p class="header">Отобрать компании по параметрам</p>
+</header>
+    <form action="{{ url_for('filters') }}" method="post">
+        <p>
+            <span>Темп прироста выручки более: </span>
+            <input id = filter type="text" autocomplete="off" value="10" name="income">
+             %    Добавить фильтр
+            <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>Темп роста чистой прибыли выше, чем: </span>
+        <input id = filter type="text" autocomplete="off" value="10" name="net">
+        %    Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>Темп роста активов более, чем: </span>
+        <input id = filter type="text" autocomplete="off" value="10" name="assets">
+        %    Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>P/S менее </span>
+        <input id = filter type="text" autocomplete="off" value="5" name="ps">
+            Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>Див доходность более: </span>
+        <input id = filter type="text" autocomplete="off" value="5" name="div">
+        %    Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>Капитализация более: </span>
+        <input id = filter type="text" autocomplete="off" value="100" name="cap">
+        млрд руб    Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+        <p>
+        <span>Доля собственного капитала более: </span>
+        <input id = filter type="text" autocomplete="off" value="20" name="equ">
+        %    Добавить фильтр
+        <input type="checkbox" checked>
+        </p>
+
+        <p><input type="submit" value="Найти"></p>
+    </form>
+
+        <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead>
+                {% if not companies %}
+                <tr>
+                    <th>Компании не найдены</td>
+                </tr>
+                {% else %}
+                <tr>
+                {% for key in companies[0] %}
+                    {% if key == 'name' %}
+                    <th>Компании</th>
+                    {% else %}
+                    <th>{{key}}</th>
+                    {% endif %}
+                {% endfor %}
+                <th>Узнать больше:</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies %}
+                <tr>
+                    {% for value in company.values() %}
+                    <td>{{value}}</td>
+                    {% endfor %}
+                    <td>
+                        <form action="{{ url_for('company') }}" method="get">
+                            <input type="hidden" name="company" value="{{company.name}}">
+                            <input type="submit" value="?">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+            </div>
+
+{% endblock %}

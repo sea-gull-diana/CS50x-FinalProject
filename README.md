@@ -34,13 +34,10 @@ Let’s see what the “growth” function does. It takes two arguments: user’
 
 The “average_growth” function takes 3 arguments: “data” list, column name and a span which will always be equal to 4 if we select data for 5 last years. But since I might change the number of years later and some companies have less than 5 years worth of data in the database, “span” value is calculated as `len(data) – 2` (remember, we appended 0.0 to the end of “data”, so we need to extract 2). If span is less than 1, the function just returns zero, as it’s impossible to calculate growth rate for just one year. The function is recursive. Its base condition is the following:
 
-```
+```python
     if len(d) == 2:
-
         d.pop(0)
-
         d = (d[0] / span) * 100 - 100
-
         return d
 ```
 
@@ -48,13 +45,10 @@ That is to say, if there are only two elements left in the “data”/d list, de
 
 Another part of the function uses recursion:
 
-```
+```python
     else:
-
         d[-1] += float(d[1][col])/float(d[0][col])
-
         d.pop(0)
-
         return average_growth(d, col, span)
 ```
 
@@ -62,59 +56,34 @@ Remember “d[-1] is this zero float element we appended to “data” list in �
 
 The final part of the “filters” function allows to intersect the values in the lists stored in the “companies” list variable if more than one filter were used:
 
-```
+```python
         # Intersect the results of all the filters used
-
         if len(companies) == 0:
-
             # if no filters were used, return all companies' names
-
             return redirect(url_for('filters'))
-
         # if more than one filter was used
-
         elif len(companies) > 1:
-
             # append company names of every filter result in the lists inside a variable "list"
-
             list = [[] for i in range (len(companies))]
-
             for i in range(len(companies)):
-
                 for company in companies[i]:
-
                     list[i].append(company['name'])
-
                 # intersect lists with company names
-
                 list[0] = set(list[0]).intersection(set(list[i]))
 
 
-
             # create a list "names" and store the resulting company names in separate dicts inside it
-
             names = []
-
             for name in list[0]:
-
                 names.append({'name': name})
-
             # Iterate over dicts in "companies" lists and in names checking if the values of 'name' are same
-
             for i in range(len(companies)):
-
                 for company in companies[i]:
-
                     for name in names:
-
                         if company['name'] == name['name']:
-
                             # add data in "company" dict to "name" dict with the same 'name' value
-
                             name.update(company)
-
             return render_template("filters.html", companies=names)
-
         return render_template("filters.html", companies=companies[0])
 ```
 
@@ -126,53 +95,33 @@ If “companies” remains empty it means that no filters were used and the func
 
 The function first checks if a company already exists in the database. If the company is in there already, the function then might insert its stock symbol using UPDATE, in case such an input was provided. If there’s no such company, it will insert new rows.
 
-```
+```python
 check = db.execute(f'SELECT * FROM companies WHERE TRIM(company_name) LIKE TRIM(?)', name)
-
  if not check:
-
  # check if the company's data was already inserted once
-
  	db.execute("INSERT INTO companies (company_name, women, men, symbol) VALUES (?,?,?,?)", name, women, men, symbol)
-
 elif symbol:
-
     db.execute(f'UPDATE companies SET symbol = ? WHERE TRIM(company_name) LIKE TRIM(?)', symbol, name)
-
 # create a row for a new company
 ```
 
 There was a difficult design choice I had to make while creating an “upload” function. In the csv tables I downloaded from *smart-lab.ru* the column names were years (aka 2016, 2017, 2018…). And the type of the data (income, Capitalisation, net income, P/S…) were all in the cells of a left column. However, different companies have different amount of year columns in their csv tables and I didn’t want my function to add new columns every time a new year value appears. I also didn’t want to limit the amount of years to insert in the database, since I want to be able to update the table in the following years adding new information. Thus, I decided to “rotate” the table and insert csv files in the database with data types’ names as columns. In this piece of code you can see how the function first inserts new rows for every new year in the csv table where the company_id corresponds to the company in question. Then it iterates over rows in DictReader and updates these newly-created rows with data from rows where the first value corresponds to one of my table’s existing columns (there might be data types specific to this company that shouldn’t be included):
 
-```
+```python
 with open(f"{file_path}", encoding='utf-8-sig') as f:
-
     reader = csv.DictReader(f, delimiter=";")
-
     years = next(reader)
-
     for year in years:
-
     # Iterate over column names
-
         if year and not db.execute("SELECT * FROM finance WHERE Год = ? AND company_id = ?", year, id):
-
             db.execute("INSERT INTO finance (company_id, Год, ?) VALUES (?, ?, ?)", years[""], id, year, years[f"{year}"])
-
             # create rows for every year in the csv file unless such a year already exists for this company
-
     line = db.execute("SELECT * FROM finance WHERE rowid = 1")[0]
-
     columns = line.keys()
-
     for row in reader:
-
         for year in years:
-
         # Iterate over column names
-
             if year and row[""] in columns:
-
                 db.execute("UPDATE finance SET ? = REPLACE(?, ',', '.') WHERE company_id = ? AND Год = ?", row[""], row[f"{year}"], id, year)
 ```
 
@@ -215,99 +164,62 @@ That’s where the csv files are uploaded. But after reading them the “upload�
 
 Nothing too elaborate here, but you might notice how I use fixed table layout and position “absolute” on the left column to make it unscrollable:
 
-```
+```css
 /* Make the table scrollable horizontally */
-
 div {
-
     overflow-x: scroll;
-
     overflow-y: visible;
-
     padding: 0;
-
 }
 
  /* Fixed table layout */
-
 .scroll {
-
     background-color: transparent;
-
     margin-bottom: 1rem;
-
     table-layout: fixed;
-
 }
 
 table th,
-
 table td {
-
     vertical-align: middle;
-
     width: 7em;
-
     height: 5em;
-
 }
 
 /* For the empty cell in thead above the fixed column */
-
 .headrow {
-
     width: 10em;
-
 }
 
 /* Fix a column to its position on the screen */
-
 .headcol {
-
     position: absolute;
-
     margin-bottom: 1rem;
-
     width: 10em;
-
 }
 ```
 
 And the size of the font adapts to a screen:
 
-```
+```css
 main
-
 {
-
     /* Scroll horizontally as needed */
-
     overflow-x: auto;
 
-
-
     /* Center contents */
-
     text-align: center;
 
-
-
     font-size: calc(0.5em + 0.5vw);
-
 }
 
 /* Adjustable font size */
-
 .header {
-
     font-size: calc(1.3em + 1.3vw);
-
 }
 
 .subhead {
-
     font-size: calc(1em + 1vw);
-
 }
 ```
 
@@ -323,123 +235,68 @@ My layout is pretty simple. It’s pretty much a copy of Problem Set 9 Finance l
 
 That’s my main page. I’ve decided not to call it index.html. No specific reason, I just wanted to call it “project”. This page receives all the data from the “companies” table in my database from the “/” route and displays in a table all companies in the database with a percentage and a number of women directors in them as well as a form that sends a company’s name to the “/company” route via GET:
 
-```
+```html
     <div class="table-responsive">
-
     <table class="table table-hover">
-
         <thead>
-
             <tr>
-
                 <th></th>
-
                 <th colspan="2">Совет директоров</th>
-
                 <th></th>
-
             </tr>
-
             <tr>
-
                 <th>Название</th>
-
                 <th>Процент женщин</th>
-
                 <th>Число женщин</th>
-
                 <th></th>
-
             </tr>
-
         </thead>
-
         <tbody>
-
             {% if not companies %}
-
             <tr>
-
                 <td>--</td>
-
                 <td>--</td>
-
             </tr>
-
             {% endif %}
-
             {% for company in companies %}
-
             <tr>
-
                 <td id = name>{{company.company_name}}</td>
-
                 <td>{{"{:.0%}".format(company.women/(company.women+company.men))}}</td>
-
                 <td>{{company.women}}</td>
-
                 <td>
-
                     <form id="company" action="{{ url_for('company') }}" method="get">
-
                         <input type="hidden" name="company" value="{{company.company_name}}">
-
                         <input type="submit" value="?">
-
                     </form>
-
                 </td>
-
             </tr>
-
             {%endfor%}
-
         </tbody>
-
     </table>
-
     </div>
 ```
 
 At the beginning of this page there’s also a form to access the “/filters” route. And a search bar. It takes text input, and JavaScript code notices this input the moment a keyboard key is pushed and hides or unhides the rows where a company name contains the inputted character or a string of characters:
 
-```
+```html
 <script>
-
     document.addEventListener('DOMContentLoaded', function() {
-
         var search = document.querySelector('input[type="text"]');
-
         search.addEventListener('keyup', function() {
-
             var cell = document.querySelectorAll("#name");
-
             for (c of cell)
-
             {
-
                 if (c.innerHTML.indexOf(search.value) !== -1)
-
                 {
-
                   c.parentNode.style.display = "table-row";
-
                 }
-
                 else
-
                 {
-
                   c.parentNode.style.display = "none";
-
                 }
-
             }
-
         });
-
     });
-
 </script>
 ```
 
@@ -447,51 +304,29 @@ At the beginning of this page there’s also a form to access the “/filters”
 
 This page takes a variable containing all the data about a particular company from the “/company” route. It then displays most of the financial data in a table with the use of Jinja “if” conditions and “for” loops:
 
-```
+```html
     <div class="table-responsive">
-
     <table class="table table-hover scroll">
-
         <thead>
-
             <tr>
-
                 <th class="headrow"></th>
-
                 {% for  d in data %}
-
                 <th>{{d.Год}}</th>
-
                 {%endfor%}
-
             </tr>
-
         </thead>
-
         <tbody>
-
             {% for key, value in data[0].items() %}
-
              {% if not key in ["company_id", "Год", "Дата отчета", "company_name", "id", "women", "men", "symbol"] %}
-
             <tr>
-
                 <th class="table-danger headcol">{{key}}</td>
-
                 {% for d in data %}
-
                 <td>{{d[key]}}</td>
-
                 {%endfor%}
-
             </tr>
-
              {% endif %}
-
             {%endfor%}
-
         </tbody>
-
     </div>
 ```
 
@@ -499,89 +334,51 @@ This page takes a variable containing all the data about a particular company fr
 
 Displays a form with 7 filters which sends a POST request to the “/filters” route. After the form it creates a table using all values in a variable it received from the route:
 
-```
+```html
         <div class="table-responsive">
-
         <table class="table table-hover table-sm">
-
             <thead>
-
                 {% if not companies %}
-
                 <tr>
-
                     <th>Компании не найдены</td>
-
                 </tr>
-
                 {% else %}
-
                 <tr>
-
                 {% for key in companies[0] %}
-
                     {% if key == 'name' %}
-
                     <th>Компании</th>
-
                     {% else %}
-
                     <th>{{key}}</th>
-
                     {% endif %}
-
                 {% endfor %}
-
                 <th>Узнать больше:</th>
-
                 </tr>
-
             </thead>
-
             <tbody>
-
                 {% for company in companies %}
-
                 <tr>
-
                     {% for value in company.values() %}
-
                     <td>{{value}}</td>
-
                     {% endfor %}
-
                     <td>
-
                         <form action="{{ url_for('company') }}" method="get">
-
                             <input type="hidden" name="company" value="{{company.name}}">
-
                             <input type="submit" value="?">
-
                         </form>
-
                     </td>
-
                 </tr>
-
                 {% endfor %}
-
                 {% endif %}
-
             </tbody>
-
             </div>
 ```
 
 You might have also noticed this piece of JavaScript code :
 
-```
+```javascript
     if ('{{message}}')
-
     {
-
         alert('{{message}}');
-
     }
 ```
 
